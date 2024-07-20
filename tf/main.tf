@@ -9,9 +9,5 @@ terraform {
 
 provider "google" {
   project = var.project_id
-}
-
-resource "google_project" "my_project" {
-  name       = var.project_name
-  project_id = var.project_id
+  region = var.project_region
 }
