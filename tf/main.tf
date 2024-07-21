@@ -53,6 +53,43 @@ resource "google_cloudfunctions2_function" "cf_rng" {
   }
 }
 
+
+data "archive_file" "cf_multiply_archive" {
+  type        = "zip"
+  output_path = "/tmp/function-random-number-gen.zip"
+  source_dir  = "../function_multiply_number/"
+}
+
+resource "google_storage_bucket_object" "object_multiply" {
+  name   = "function-multiply-number.zip"
+  bucket = google_storage_bucket.default.name
+  source = data.archive_file.cf_multiply_archive.output_path # Add path to the zipped function source code
+}
+
+resource "google_cloudfunctions2_function" "cf_multiply" {
+  name        = "multiply-num-function-v2"
+  location    = var.project_region
+  description = "Multiplies supplied number function"
+
+  build_config {
+    runtime     = "python312"
+    entry_point = "multiply" # Set the entry point
+    source {
+      storage_source {
+        bucket = google_storage_bucket.default.name
+        object = google_storage_bucket_object.object_multiply.name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count = 1
+    available_memory   = "256M"
+    timeout_seconds    = 60
+  }
+}
+
+
 resource "google_cloud_run_service_iam_member" "member" {
   location = google_cloudfunctions2_function.cf_rng.location
   service  = google_cloudfunctions2_function.cf_rng.name
