@@ -97,3 +97,13 @@ resource "google_cloud_run_service_iam_member" "member" {
   member   = "allUsers"
 }
 
+resource "google_artifact_registry_repository" "my-repo" {
+  location      = var.project_region
+  repository_id = "my-repository"
+  description   = "example docker repository"
+  format        = "DOCKER"
+
+  docker_config {
+    immutable_tags = true
+  }
+}
