@@ -1,0 +1,13 @@
+steps:
+  - id: build
+    name: docker
+    args:
+      - build
+      - .
+      - '-t'
+      - us-east1-docker.pkg.dev/confident-key-429822-i1/my-repository/IMAGE
+  - id: push
+    name: docker
+    args:
+      - push
+      - us-east1-docker.pkg.dev/confident-key-429822-i1/my-repository/IMAGE

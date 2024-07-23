@@ -9,7 +9,7 @@ terraform {
 
 provider "google" {
   project = var.project_id
-  region = var.project_region
+  region  = var.project_region
 }
 
 resource "google_storage_bucket" "default" {
@@ -106,4 +106,39 @@ resource "google_artifact_registry_repository" "my-repo" {
   docker_config {
     immutable_tags = true
   }
+}
+
+resource "google_cloudbuild_trigger" "docker_build_trigger" {
+  location = var.project_region
+  service_account = google_service_account.cloudbuild_service_account.id
+
+  depends_on = [
+    google_project_iam_member.act_as,
+    google_project_iam_member.logs_writer
+  ]
+
+  trigger_template {
+    branch_name = "main"
+    repo_name   = "my-repo"
+  }
+
+  filename = "../cloud_run_floor/cloudbuild.yaml"
+}
+
+resource "google_service_account" "cloudbuild_service_account" {
+  account_id   = "cloudbuild-sa"
+  display_name = "cloudbuild-sa"
+  description  = "Cloud build service account"
+}
+
+resource "google_project_iam_member" "act_as" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.cloudbuild_service_account.email}"
+}
+
+resource "google_project_iam_member" "logs_writer" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.cloudbuild_service_account.email}"
 }
